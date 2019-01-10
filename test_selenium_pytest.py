@@ -7,11 +7,14 @@ Notes:
 
 '''
 from time import sleep
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import logging
 from selenium.common.exceptions import NoSuchElementException 
 from selenium.webdriver.common.by import By       
+from selenium.webdriver.support.events import EventFiringWebDriver
+from selenium.webdriver.support.events import AbstractEventListener
 
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
@@ -115,9 +118,12 @@ class TestPythonOrgPageModel():
                 self.wd = webdriver.Chrome()
         except:
             log.info('Failed to setup browser.')
-            
+        
+        # taking screenshots on Exception,e.g. cannot find elements. But not in assert failure. 
+        self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())        
         # set implicitly_wait for elements to load
-        self.wd.implicitly_wait(30)
+        self.wd.implicitly_wait(10)
+ 
  
     def teardownOwn(self):
         log.info('teardownOwn::tearing down browser...')
@@ -126,6 +132,7 @@ class TestPythonOrgPageModel():
     # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed. 
     def teardown(self):
         log.info('teardown::tearing down browser...')
+        # self.screenshot_on_failure()
         # self.wd.service.process == None if quit already.
         if self.wd.service.process != None:
             self.wd.quit()    
@@ -144,7 +151,6 @@ class TestPythonOrgPageModel():
             assert homepage.is_title_matched()   
             # assert homepage.getTitle() == 'Failed Title'
             pyPiHomepage = homepage.click_pypi()
-            self.wd.save_screenshot("screenshot_PyPiHomepage.png")
             # Check it redirects to PyPi website.
             assert pyPiHomepage != None
             assert pyPiHomepage.is_page_matched()
@@ -156,11 +162,31 @@ class TestPythonOrgPageModel():
             check_result_row = 1
             expected_resultText = 'selenium'
             actual_resultText = searchResultPage.getSearchResultText(check_result_row) 
-            self.wd.save_screenshot("screenshot_searchResult.png")
-            assert actual_resultText == expected_resultText
+            # self.wd.save_screenshot("screenshot_searchResult.png")
+            if actual_resultText != expected_resultText:
+                self.take_screenshot()
+                assert False, 'search result not matched'
             # Tear down browser
             self.teardownOwn()
             
+    def take_screenshot(self):
+        now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        self.wd.save_screenshot("screenshot_" + now + ".png")
+'''
+Take screenshot on Exception,e.g. cannot find elements. But not in assert failure. However for assert failure you can control and take screenshot if needed.
+To take screenshot for both exception and assert failure, it seems we have to use unittest framework. Check below link:
+https://stackoverflow.com/questions/12024848/automatic-screenshots-when-test-fail-by-selenium-webdriver-in-python 
+'''
+# http://blog.likewise.org/2015/01/automatically-capture-browser-screenshots-after-failed-python-ghostdriver-tests/ 
+class ScreenshotListener(AbstractEventListener):
+    def on_exception(self, exception, driver):
+        now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        screenshot_name = "screenshot_" + now + ".png"
+        driver.save_screenshot(screenshot_name)
+        print("Screenshot saved as '%s'" % screenshot_name)
+# Usage example:
+# self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())    
+ 
 # Page Object design 
 # https://www.seleniumhq.org/docs/06_test_design_considerations.jsp#page-object-design-pattern (Java Example only)
 # https://selenium-python.readthedocs.io/page-objects.html
@@ -362,7 +388,7 @@ def test_temp():
     browser.find_element_by_id("search").clear()
     browser.find_element_by_id("search").send_keys("selenium")
     browser.find_element_by_id("search").send_keys(Keys.ENTER)    
-    sleep(2)
+    browser.implicitly_wait(10)
     result_index = 1
     elem_found = True
     try:
