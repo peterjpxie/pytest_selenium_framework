@@ -18,6 +18,7 @@ from selenium.webdriver.support.events import EventFiringWebDriver
 from selenium.webdriver.support.events import AbstractEventListener
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import inspect
 
 TIMEWAIT_PAGE_LOAD = 5
 
@@ -111,6 +112,7 @@ class TestPythonOrg():
             assert 'Welcome to Python.org' == self.wd.title   
             self.teardownOwn()
 
+
 # Page Object Model            
 class TestPythonOrgPageModel():
     def setupOwn(self,browser):
@@ -166,13 +168,17 @@ class TestPythonOrgPageModel():
             # self.wd.save_screenshot("screenshot_searchResult.png")
             if actual_resultText != expected_resultText:
                 self.take_screenshot()
-                assert False, 'search result not matched'
+            assert actual_resultText == expected_resultText, 'search result not matched'
             # Tear down browser
             self.teardownOwn()
             
     def take_screenshot(self):
+        class_name = self.__class__.__name__
+        # This return caller function's name, not this function take_screenshot.
+        caller_func_name = inspect.stack()[1][3]
         now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.wd.save_screenshot("screenshot_" + now + ".png")
+        filename = "screenshot_" + class_name + '-' + caller_func_name + '_' + now + ".png"
+        self.wd.save_screenshot(filename)
 '''
 Take screenshot on Exception,e.g. cannot find elements. But not in assert failure. However for assert failure you can control and take screenshot if needed.
 To take screenshot for both exception and assert failure, it seems we have to use unittest framework. Check below link:
@@ -396,7 +402,7 @@ def disable_test_locators():
 
 def test_temp():
     global browser
-    # wd.get('https://www.seleniumhq.org/')
+    '''
     browser.get('http://pypi.org') 
     browser.find_element_by_id("search").clear()
     browser.find_element_by_id("search").send_keys("selenium")
@@ -405,15 +411,8 @@ def test_temp():
     elem_found = True
     #try:
         # elem = browser.find_element_by_xpath( '//*[@id="order"]')
-    try:
-        ret = WebDriverWait(browser, 5).until( EC.title_is('Search results · PyPI=' ))
-    except:
-        ret = False
-    print('element found')
-    print ('return is %s' % ret )
+    '''
     
-    print('Finishing function')
-    assert ret
         
 # Test without pytest
 def main():        
