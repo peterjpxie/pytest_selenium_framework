@@ -7,5 +7,5 @@ A Python pytest + selenium test framework example, which demonstrates following:
 * A few tricks
   * Take screenshots on exception, e.g., cannot find an element.
   
-Check Wiki page for more details, e.g., setup and run.
+Check [wiki](https://github.com/peterjpxie/pytest_selenium_framework/wiki) for details.
 
