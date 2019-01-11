@@ -11,11 +11,14 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import logging
-from selenium.common.exceptions import NoSuchElementException 
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By       
 from selenium.webdriver.support.events import EventFiringWebDriver
 from selenium.webdriver.support.events import AbstractEventListener
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
+TIMEWAIT_PAGE_LOAD = 5
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
 logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
@@ -123,8 +126,7 @@ class TestPythonOrgPageModel():
         self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())        
         # set implicitly_wait for elements to load
         self.wd.implicitly_wait(10)
- 
- 
+  
     def teardownOwn(self):
         log.info('teardownOwn::tearing down browser...')
         self.wd.quit()
@@ -147,12 +149,10 @@ class TestPythonOrgPageModel():
             homepage = PythonOrgHomepage(self.wd)
             # Always check if it is the right page first
             assert homepage.is_page_matched()
-            # Test Validations
-            assert homepage.is_title_matched()   
+            # Test Validations 
             # assert homepage.getTitle() == 'Failed Title'
             pyPiHomepage = homepage.click_pypi()
             # Check it redirects to PyPi website.
-            assert pyPiHomepage != None
             assert pyPiHomepage.is_page_matched()
             
             # Search by 'selenium' and check 1st result is selenium package.
@@ -213,11 +213,12 @@ class PythonOrgHomepage():
     # Call this to verify if page is matched (1st check) right after initialization
     def is_page_matched(self):
         # Check if it is the right page by title
-        return self.wd.title == 'Welcome to Python.org'
-    
-    # By this way, you won't see the actual / expected values in pytest error outputs if failed. But good for page object design concept.
-    def is_title_matched(self):
-        return self.wd.title == 'Welcome to Python.org'
+        # return self.wd.title == 'Welcome to Python.org'
+        try:
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('Welcome to Python.org' ))
+        except:
+            ret = False
+        return ret
         
     def getTitle(self):
         return self.wd.title
@@ -239,14 +240,19 @@ class PyPiHomepage():
         self.wd = webdrive   
     
     def is_page_matched(self):
-        return self.wd.title == 'PyPI – the Python Package Index · PyPI'
+        # return self.wd.title == 'PyPI – the Python Package Index · PyPI'
+        try:
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('PyPI – the Python Package Index · PyPI' ))
+        except:
+            ret = False
+        return ret
         
     def searchPackage(self,searchText):       
         self.wd.find_element_by_id("search").clear()
         self.wd.find_element_by_id("search").send_keys("%s" % str(searchText).strip())
         self.wd.find_element_by_id("search").send_keys(Keys.ENTER)
-        # wait for page to load, find an element on next page, order dropdown in this case.
-        wait_element_nextPage = self.wd.find_element_by_xpath('//*[@id="order"]')
+        # wait for page to load, find an element on next page, order dropdown in this case. --- Removed and move to is_page_matched with wait-until function in next Page 
+        # wait_element_nextPage = self.wd.find_element_by_xpath('//*[@id="order"]')
         return PyPiSearchResultPage(self.wd)
 
 class PyPiSearchResultPage(): 
@@ -255,7 +261,13 @@ class PyPiSearchResultPage():
     
     def is_page_matched(self):
         log.info('Current page tile:' + self.wd.title)
-        return self.wd.title == 'Search results · PyPI'
+        # return self.wd.title == 'Search results · PyPI'
+        try:
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('Search results · PyPI' ))
+        except:
+            ret = False
+        return ret
+        
     
     # index starts with 1
     def getSearchResultText(self,index):
@@ -388,20 +400,37 @@ def test_temp():
     browser.find_element_by_id("search").clear()
     browser.find_element_by_id("search").send_keys("selenium")
     browser.find_element_by_id("search").send_keys(Keys.ENTER)    
-    browser.implicitly_wait(10)
-    result_index = 1
+    # browser.implicitly_wait(3)
     elem_found = True
+    #try:
+        # elem = browser.find_element_by_xpath( '//*[@id="order"]')
     try:
-        elem = browser.find_element_by_xpath( '//*[@id="content"]/section/div/div[2]/form/section[2]/ul/li[%s]//span[1]' % result_index)
-    except NoSuchElementException:
-        log.info('Element not found.')
-        elem_found = False     
-    if elem_found == False:
-        assert False
-    else:
-        log.info('Found element.')
-        log.info('elem text:'+ elem.text)
-  
+        ret = WebDriverWait(browser, 5).until( EC.title_is('Search results · PyPI=' ))
+    except:
+        ret = False
+    print('element found')
+    print ('return is %s' % ret )
+    
+    print('Finishing function')
+    assert ret
+
+    
+    
+'''  
+    from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+driver = webdriver.Firefox()
+driver.get("http://somedomain/url_that_delays_loading")
+try:
+    element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "myDynamicElement"))
+    )
+finally:
+    driver.quit()
+'''    
         
 # Test without pytest
 def main():        
