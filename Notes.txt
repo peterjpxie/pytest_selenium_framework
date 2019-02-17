@@ -1,0 +1,6 @@
+pytest html report:
+
+https://pypi.org/project/pytest-html/
+
+pip3 install -U pytest-html
+pytest -v --html=report.html --self-contained-html
