@@ -379,6 +379,13 @@ def disable_test_locators():
         username_elem = browser.find_element(By.XPATH,"//*[@id='loginForm']/input[1]")
         username_elem = browser.find_element(By.NAME,"username")
         
+        # Find element by text
+        text_elem = browser.find_element_by_xpath("//*[text()='Simple page']") # Exact match 
+        text_elem = browser.find_element_by_xpath("//*[contains(text(),'Simple')]") # contain
+        # Find element by value
+        submit_button = browser.find_element_by_xpath("//*[@value='Login']")  
+        clear_button = browser.find_element_by_xpath("//input[@value='Clear']") 
+        
         ''' These are the attributes available for By class:
         ID = "id"
         XPATH = "xpath"
