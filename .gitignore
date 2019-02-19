@@ -1,5 +1,6 @@
 *.log
 .pytest_cache
+.idea
 __pycache__
 assets
 report*.html

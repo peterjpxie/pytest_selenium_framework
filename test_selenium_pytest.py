@@ -23,7 +23,7 @@ import inspect
 TIMEWAIT_PAGE_LOAD = 5
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
-logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s line-%(lineno)d: %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
 log = logging.getLogger('')
 
 ''' 
@@ -41,7 +41,9 @@ def teardown_function():
     browser.quit()
     
 def test_seleniumhq_homepage(request):
+    # print test function name 
     log.info("test_func %s:" % request.node.name)
+    # Output: test_func test_seleniumhq_homepage:
     global browser
     browser.get('https://www.seleniumhq.org/')
     assert 'Selenium - Web Browser Automation' == browser.title
@@ -291,15 +293,6 @@ class PyPiSearchResultPage():
             log.info('elem text:'+ self.elem.text)
             return self.elem.text
 
-'''
-    def 
-    driver.find_element_by_id("search").send_keys("selenium")
-    driver.find_element_by_id("search").send_keys(Keys.ENTER)
-    try: self.assertEqual("selenium", driver.find_element_by_xpath("(.//*[normalize-space(text()) and normalize-space(.)='Add filter'])[1]/following::span[1]").text)
-    except AssertionError as e: self.verificationErrors.append(str(e))
-    self.assertEqual("3.141.1", driver.find_element_by_xpath("(.//*[normalize-space(text()) and normalize-space(.)='selenium'])[1]/following::span[1]").text)
-'''        
-
 # Check exist by xpath        
 def is_element_present_by_xpath(webdriver,xpath):
     try:
@@ -406,19 +399,11 @@ def disable_test_locators():
         username_elem.send_keys('Peter')    
         
     sleep(1)
-
+    
 def test_temp():
     global browser
-    '''
-    browser.get('http://pypi.org') 
-    browser.find_element_by_id("search").clear()
-    browser.find_element_by_id("search").send_keys("selenium")
-    browser.find_element_by_id("search").send_keys(Keys.ENTER)    
-    # browser.implicitly_wait(3)
-    elem_found = True
-    #try:
-        # elem = browser.find_element_by_xpath( '//*[@id="order"]')
-    '''
+    browser.get('https://www.seleniumhq.org/')
+    assert 'Selenium - Web Browser Automation1' == browser.title
     
         
 # Test without pytest
