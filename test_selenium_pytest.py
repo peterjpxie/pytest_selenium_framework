@@ -2,7 +2,7 @@
 Install:
 pip3 install -U pytest
 pip3 install -U selenium
-
+pip3 install -U pytest-html
 Notes:
 - Exceptions will cause test to fail and terminate just as assert.
 
