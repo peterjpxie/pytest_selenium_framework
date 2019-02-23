@@ -20,10 +20,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
 
+# explicit wait time after loading a new page to check page match.
 TIMEWAIT_PAGE_LOAD = 5
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
-logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s line-%(lineno)d: %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+logging.basicConfig(level=logging.INFO,format='%(asctime)s line-%(lineno)d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
+# logging.basicConfig(level=logging.INFO,filename = 'debug.log',format='%(asctime)s line-%(lineno)d %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S') # write to a log file
+
 log = logging.getLogger('')
 
 ''' 
@@ -71,7 +74,7 @@ class TestPythonOrgFirefox():
         self.wd.get('https://www.python.org/')
         assert 'Welcome to Python.org' == self.wd.title   
 
-# Test with a list of browsers
+# Test with a list of browsers, and headless mode
 ''' Design:
 Define own setup / teardown function so we can assign browser as argument.
 '''
@@ -87,7 +90,7 @@ class TestPythonOrg():
                 # To run headless mode in Firefox, add below options.                
                 '''
                 vOptions = webdriver.firefox.options.Options()
-                vOptions.set_headless(True) 
+                vOptions.headless = True 
                 self.wd = webdriver.Firefox(options=vOptions)
                 '''
             else:
@@ -107,6 +110,13 @@ class TestPythonOrg():
         log.info('tearing down browser...')
         self.wd.quit()
         
+    # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed. 
+    def teardown(self):
+        log.info('teardown::tearing down browser...')
+        # self.wd.service.process == None if quit already.
+        if self.wd.service.process != None:
+            self.wd.quit()  
+            
     def test_python_homepage(self):
         for browser in vBrowserList: 
             self.setupOwn(browser)
@@ -213,8 +223,19 @@ class PythonOrgBase():
             self.wd = webdrive   
     # Optionally you can define common methods or class variables in base class.
 
-#class PythonOrgHomepage(PythonOrgBase): 
-       
+# Inherit base page object
+class PythonOrgHomepage_inheritBase(PythonOrgBase): 
+    # Call this to verify if page is matched (1st check) right after initialization
+    def is_page_matched(self):
+        # Check if it is the right page by title
+        # return self.wd.title == 'Welcome to Python.org'
+        try:
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('Welcome to Python.org' ))
+        except:
+            ret = False
+        return ret
+
+# Don't use base page object        
 class PythonOrgHomepage(): 
     def __init__(self, webdrive):
         self.wd = webdrive   
@@ -405,11 +426,3 @@ def test_temp():
     browser.get('https://www.seleniumhq.org/')
     assert 'Selenium - Web Browser Automation1' == browser.title
     
-        
-# Test without pytest
-def main():        
-    setup_function()    
-    test_seleniumhq_homepage()
-    teardown_function()    
-    
-# main()    

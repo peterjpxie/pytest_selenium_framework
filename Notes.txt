@@ -1,5 +1,6 @@
-pytest html report:
+Recommend to use pytest-selenium plugin along with pytest-html plugin, which supports better html report with embedded screenshots on failures.
 
+pytest html report:
 https://pypi.org/project/pytest-html/
 
 pip3 install -U pytest-html
