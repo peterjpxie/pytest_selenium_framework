@@ -390,7 +390,7 @@ def disable_test_locators():
         username_elem = browser.find_element_by_xpath("//*[@name='username']")
         username_elem = browser.find_element_by_xpath("//*[@id='loginForm']/input[1]")
         
-        # Find username input by general method find_element
+        # Find username input by general method find_element with a locator, a tuple of ByHow and value, as argument.
         username_elem = browser.find_element(By.XPATH,"//*[@id='loginForm']/input[1]")
         username_elem = browser.find_element(By.NAME,"username")
         
