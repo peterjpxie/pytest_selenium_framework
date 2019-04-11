@@ -383,6 +383,7 @@ def disable_test_locators():
         login_form = browser.find_element_by_xpath("//form[@id='loginForm']")
         login_form = browser.find_element_by_xpath("//*[@id='loginForm']")
         login_form = browser.find_element_by_xpath("//*[@id='loginForm'][1]")
+        login_form = browser.find_element_by_xpath("//*[contains(@id,'login')]") # contains, yet to test
         
         # Below all find the same username element
         username_elem = browser.find_element_by_xpath("//input[@name='username']")
