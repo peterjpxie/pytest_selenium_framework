@@ -69,6 +69,8 @@ class TestPythonOrgFirefox():
     def setup(self):
         log.info('Setting up browser...')
         self.wd = webdriver.Firefox()
+        # set viewport / window size
+        self.wd.set_window_size(1024, 800)
  
     def teardown(self):
         log.info('tearing down browser...')
@@ -76,7 +78,8 @@ class TestPythonOrgFirefox():
         
     def test_python_homepage(self):
         self.wd.get('https://www.python.org/')
-        assert 'Welcome to Python.org' == self.wd.title   
+        assert 'Welcome to Python.org' == self.wd.title  
+        sleep(2)
 
 # Test with a list of browsers, and headless mode
 ''' Design:
@@ -84,7 +87,7 @@ Define own setup / teardown function so we can assign browser as argument.
 '''
 # Define browsers you want to test, you can read from a config file as well.
 #vBrowserList = ['Firefox','Chrome']
-vBrowserList = ['Firefox']
+vBrowserList = ['Chrome']
 class TestPythonOrg():
     def setupOwn(self,browser):
         log.info('Setting up browser...')
