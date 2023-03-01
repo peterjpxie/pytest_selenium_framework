@@ -120,4 +120,4 @@ dmypy.json
 .pyre/
 
 # pytest-html repots
-.html
+# .html
