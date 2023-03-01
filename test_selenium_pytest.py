@@ -1,16 +1,15 @@
-'''
+"""
 Install:
-pip3 install -U pytest
-pip3 install -U selenium
-pip3 install -U pytest-html
+pip3 install -r requirements.txt 
 
-or
-pip3 install -r rrequirements.txt 
+Run:
+pytest
+
+see pytest.ini for more options.
 
 Notes:
 - Exceptions will cause test to fail and terminate just as assert.
-
-'''
+"""
 from time import sleep
 from datetime import datetime
 from selenium import webdriver
@@ -25,22 +24,36 @@ from selenium.webdriver.support import expected_conditions as EC
 import inspect
 
 # explicit wait time after loading a new page to check page match.
-TIMEWAIT_PAGE_LOAD = 5
+TIMEWAIT_PAGE_LOAD = 3
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
-logging.basicConfig(level=logging.INFO,format='%(asctime)s line-%(lineno)d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
-# logging.basicConfig(level=logging.INFO,filename = 'debug.log',format='%(asctime)s line-%(lineno)d %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S') # write to a log file
+# %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
+common_formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)-7s][%(lineno)-3d]: %(message)s",
+    datefmt="%Y-%m-%d %I:%M:%S",
+)
 
-log = logging.getLogger('')
+# Note: To create multiple log files, must use different logger name.
+def setup_logger(log_file, level=logging.INFO, name="", formatter=common_formatter):
+    """Function setup as many loggers as you want."""
+    handler = logging.FileHandler(log_file, mode="w")  # default mode is append
+    # Or use a rotating file handler
+    # handler = RotatingFileHandler(log_file,maxBytes=1024, backupCount=5)
+    handler.setFormatter(formatter)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger
 
-''' 
-Notes:
-    - To use function without class, use 'global' browser scope across functions.
-'''
+# default debug logger
+log = setup_logger("debug.log", logging.INFO, name=__name__)
+
+# Notes:
+#    - To use function without class, use 'global' browser scope across functions.
 def setup_function():
     log.info('Setup function')
     global browser
-    browser = webdriver.Firefox()
+    browser = webdriver.Chrome()
 
 def teardown_function():
     log.info('Teardown function')
@@ -48,12 +61,12 @@ def teardown_function():
     browser.quit()
     
 def test_seleniumhq_homepage(request):
-    # print test function name 
+    # print test function name
     log.info("test_func %s:" % request.node.name)
     # Output: test_func test_seleniumhq_homepage:
     global browser
-    browser.get('https://www.seleniumhq.org/')
-    assert 'Selenium - Web Browser Automation' == browser.title
+    browser.get('https://www.selenium.dev/')
+    assert 'Selenium' in browser.title
 
 def test_yahoo_search(request):
     log.info("test_func %s:" % request.node.name)
@@ -65,10 +78,10 @@ def test_yahoo_search(request):
     elem.send_keys('seleniumhq' + Keys.RETURN) 
     sleep(2)     
 
-class TestPythonOrgFirefox():
+class TestPythonOrgChrome():
     def setup(self):
         log.info('Setting up browser...')
-        self.wd = webdriver.Firefox()
+        self.wd = webdriver.Chrome() # webdriver.Firefox()
         # set viewport / window size
         self.wd.set_window_size(1024, 800)
  
@@ -82,13 +95,13 @@ class TestPythonOrgFirefox():
         sleep(2)
 
 # Test with a list of browsers, and headless mode
-''' Design:
-Define own setup / teardown function so we can assign browser as argument.
-'''
+# Design:
+#   Define own setup / teardown function so we can assign browser as argument.
+
 # Define browsers you want to test, you can read from a config file as well.
-#vBrowserList = ['Firefox','Chrome']
-vBrowserList = ['Chrome']
-class TestPythonOrg():
+#browser_list = ['Firefox','Chrome']
+browser_list = ['Chrome']
+class TestPythonOrgMultiDrivers():
     def setupOwn(self,browser):
         log.info('Setting up browser...')
         try:
@@ -125,7 +138,7 @@ class TestPythonOrg():
             self.wd.quit()  
             
     def test_python_homepage(self):
-        for browser in vBrowserList: 
+        for browser in browser_list: 
             self.setupOwn(browser)
             self.wd.get('https://www.python.org/')
             assert 'Welcome to Python.org' == self.wd.title   
@@ -156,13 +169,12 @@ class TestPythonOrgPageModel():
     # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed. 
     def teardown(self):
         log.info('teardown::tearing down browser...')
-        # self.screenshot_on_failure()
         # self.wd.service.process == None if quit already.
         if self.wd.service.process != None:
             self.wd.quit()    
         
     def test_python_homepage_pageObject(self):
-        for browser in vBrowserList: 
+        for browser in browser_list: 
             # Set up browser
             self.setupOwn(browser)
             
@@ -198,22 +210,23 @@ class TestPythonOrgPageModel():
         now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         filename = "screenshot_" + class_name + '-' + caller_func_name + '_' + now + ".png"
         self.wd.save_screenshot(filename)
-'''
-Take screenshot on Exception,e.g. cannot find elements. But not in assert failure. However for assert failure you can control and take screenshot if needed.
-To take screenshot for both exception and assert failure, it seems we have to use unittest framework. Check below link:
-https://stackoverflow.com/questions/12024848/automatic-screenshots-when-test-fail-by-selenium-webdriver-in-python 
-'''
+
+
+# Take screenshot on Exception,e.g. cannot find elements. But not in assert failure. However for assert failure you can control and take screenshot if needed.
+# To take screenshot for both exception and assert failure, it seems we have to use unittest framework. Check below link:
+# https://stackoverflow.com/questions/12024848/automatic-screenshots-when-test-fail-by-selenium-webdriver-in-python
 # http://blog.likewise.org/2015/01/automatically-capture-browser-screenshots-after-failed-python-ghostdriver-tests/ 
 class ScreenshotListener(AbstractEventListener):
     def on_exception(self, exception, driver):
         now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         screenshot_name = "screenshot_" + now + ".png"
         driver.save_screenshot(screenshot_name)
-        print("Screenshot saved as '%s'" % screenshot_name)
+        log.info("Screenshot saved as '%s'" % screenshot_name)
 # Usage example:
 # self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())    
  
-# Page Object design 
+# Page Object design
+##################### 
 # https://www.seleniumhq.org/docs/06_test_design_considerations.jsp#page-object-design-pattern (Java Example only)
 # https://selenium-python.readthedocs.io/page-objects.html
 # https://github.com/gunesmes/page-object-python-selenium
@@ -279,7 +292,7 @@ class PyPiHomepage():
     def is_page_matched(self):
         # return self.wd.title == 'PyPI – the Python Package Index · PyPI'
         try:
-            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('PyPI – the Python Package Index · PyPI' ))
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('PyPI · The Python Package Index' ))
         except:
             ret = False
         return ret
@@ -297,10 +310,10 @@ class PyPiSearchResultPage():
         self.wd = webdrive   
     
     def is_page_matched(self):
-        log.info('Current page tile:' + self.wd.title)
+        log.info('Current page title:' + self.wd.title)
         # return self.wd.title == 'Search results · PyPI'
         try:
-            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('Search results · PyPI' ))
+            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until(EC.title_is('Search results · PyPI' ))
         except:
             ret = False
         return ret
@@ -311,14 +324,16 @@ class PyPiSearchResultPage():
         self.result_index = index
         elem_found = True
         try:
-            self.elem = self.wd.find_element_by_xpath( '//*[@id="content"]/section/div/div[2]/form/section[2]/ul/li[%s]//span[1]' % self.result_index)
+            # Note: This xpath may change.
+            self.elem = self.wd.find_element_by_xpath('//*[@id="content"]/div/div/div[2]/form/div[3]/ul/li[%s]/a/h3/span[1]' 
+                                                      % self.result_index)
         except NoSuchElementException:
             log.info('Search result row not found.')
             elem_found = False
             return None   
         if elem_found == True:
-            log.info('Found search result row .')
-            log.info('elem text:'+ self.elem.text)
+            log.info('Found search result row.')
+            log.info('element text: ' + self.elem.text)
             return self.elem.text
 
 # Check exist by xpath        
@@ -374,7 +389,7 @@ Firfox: /html/body/div[3]/div[2]/div[1]/div[2]/form/input[3]
 '''
 # To run this test, install a web host server, e.g. Fenix for windows, and host above HTML file, e.g. index.html.
 # Then rename the function as test_locators().
-def disable_test_locators():
+def disabled_test_locators():
     global browser
     # wd.get('https://www.seleniumhq.org/')
     browser.get('http://127.0.0.1:8000/')        
@@ -428,9 +443,5 @@ def disable_test_locators():
         username_elem.send_keys('Peter')    
         
     sleep(1)
-    
-def test_temp():
-    global browser
-    browser.get('https://www.seleniumhq.org/')
-    assert 'Selenium - Web Browser Automation1' == browser.title
+
     
