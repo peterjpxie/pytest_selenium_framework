@@ -74,7 +74,7 @@ def test_yahoo_search(request):
     browser.get('http://www.yahoo.com')
     assert 'Yahoo' in browser.title
     
-    elem = browser.find_element_by_name('p')  # Find the search box
+    elem = browser.find_element(By.NAME,'p')  # Find the search box
     elem.send_keys('seleniumhq' + Keys.RETURN) 
     sleep(2)     
 
@@ -277,7 +277,7 @@ class PythonOrgHomepage():
     def click_pypi(self):
         # Catch find element failure to get better reading log prints 
         try:
-            elem = self.wd.find_element_by_xpath('//*[@title="Python Package Index"]')
+            elem = self.wd.find_element(By.XPATH,'//*[@title="Python Package Index"]')
         except NoSuchElementException:
             log.info('Failed to locate PyPi link.')
             return None
@@ -298,11 +298,11 @@ class PyPiHomepage():
         return ret
         
     def searchPackage(self,searchText):       
-        self.wd.find_element_by_id("search").clear()
-        self.wd.find_element_by_id("search").send_keys("%s" % str(searchText).strip())
-        self.wd.find_element_by_id("search").send_keys(Keys.ENTER)
+        self.wd.find_element(By.ID,"search").clear()
+        self.wd.find_element(By.ID,"search").send_keys("%s" % str(searchText).strip())
+        self.wd.find_element(By.ID,"search").send_keys(Keys.ENTER)
         # wait for page to load, find an element on next page, order dropdown in this case. --- Removed and move to is_page_matched with wait-until function in next Page 
-        # wait_element_nextPage = self.wd.find_element_by_xpath('//*[@id="order"]')
+        # wait_element_nextPage = self.wd.find_element(By.XPATH,'//*[@id="order"]')
         return PyPiSearchResultPage(self.wd)
 
 class PyPiSearchResultPage(): 
@@ -325,7 +325,7 @@ class PyPiSearchResultPage():
         elem_found = True
         try:
             # Note: This xpath may change.
-            self.elem = self.wd.find_element_by_xpath('//*[@id="content"]/div/div/div[2]/form/div[3]/ul/li[%s]/a/h3/span[1]' 
+            self.elem = self.wd.find_element(By.XPATH,'//*[@id="content"]/div/div/div[2]/form/div[3]/ul/li[%s]/a/h3/span[1]' 
                                                       % self.result_index)
         except NoSuchElementException:
             log.info('Search result row not found.')
@@ -339,7 +339,7 @@ class PyPiSearchResultPage():
 # Check exist by xpath        
 def is_element_present_by_xpath(webdriver,xpath):
     try:
-        webdriver.find_element_by_xpath(xpath)
+        webdriver.find_element(By.XPATH,xpath)
     except NoSuchElementException:
         return False
     return True
@@ -357,6 +357,7 @@ def is_element_present(webdriver, byHow, byValue):
 # https://selenium-python.readthedocs.io/locating-elements.html
 '''
 Methods: 
+find_element(By.X, "XX") - General, replace below deprecated methods.
 find_element_by_id
 find_element_by_name
 find_element_by_xpath  -- Recommend this
@@ -365,7 +366,6 @@ find_element_by_partial_link_text
 find_element_by_tag_name
 find_element_by_class_name
 find_element_by_css_selector  -- Don't like this because it has spaces in the path
-find_element   - General, can replace above methods.
 find_elements  - Return a list IMO.
 
 Inspectors:
@@ -395,33 +395,33 @@ def disabled_test_locators():
     browser.get('http://127.0.0.1:8000/')        
     elem_found = True
     try:
-        elem = browser.find_element_by_id('loginForm')
-        elem = browser.find_element_by_name('password')
+        elem = browser.find_element(By.ID,'loginForm')
+        elem = browser.find_element(By.NAME, 'password')
         
         # Below all find the same form element
-        login_form = browser.find_element_by_xpath("/html/body/form")
-        login_form = browser.find_element_by_xpath("/html/body/form[1]")
-        login_form = browser.find_element_by_xpath("//form[1]")
-        login_form = browser.find_element_by_xpath("//form[@id='loginForm']")
-        login_form = browser.find_element_by_xpath("//*[@id='loginForm']")
-        login_form = browser.find_element_by_xpath("//*[@id='loginForm'][1]")
-        login_form = browser.find_element_by_xpath("//*[contains(@id,'login')]") # contains, yet to test
+        login_form = browserwd.find_element(By.XPATH,"/html/body/form")
+        login_form = browserwd.find_element(By.XPATH,"/html/body/form[1]")
+        login_form = browserwd.find_element(By.XPATH,"//form[1]")
+        login_form = browserwd.find_element(By.XPATH,"//form[@id='loginForm']")
+        login_form = browserwd.find_element(By.XPATH,"//*[@id='loginForm']")
+        login_form = browserwd.find_element(By.XPATH,"//*[@id='loginForm'][1]")
+        login_form = browserwd.find_element(By.XPATH,"//*[contains(@id,'login')]") # contains, yet to test
         
         # Below all find the same username element
-        username_elem = browser.find_element_by_xpath("//input[@name='username']")
-        username_elem = browser.find_element_by_xpath("//*[@name='username']")
-        username_elem = browser.find_element_by_xpath("//*[@id='loginForm']/input[1]")
+        username_elem = browserwd.find_element(By.XPATH,"//input[@name='username']")
+        username_elem = browserwd.find_element(By.XPATH,"//*[@name='username']")
+        username_elem = browserwd.find_element(By.XPATH,"//*[@id='loginForm']/input[1]")
         
         # Find username input by general method find_element with a locator, a tuple of ByHow and value, as argument.
         username_elem = browser.find_element(By.XPATH,"//*[@id='loginForm']/input[1]")
         username_elem = browser.find_element(By.NAME,"username")
         
         # Find element by text
-        text_elem = browser.find_element_by_xpath("//*[text()='Simple page']") # Exact match 
-        text_elem = browser.find_element_by_xpath("//*[contains(text(),'Simple')]") # contain
+        text_elem = browserwd.find_element(By.XPATH,"//*[text()='Simple page']") # Exact match 
+        text_elem = browserwd.find_element(By.XPATH,"//*[contains(text(),'Simple')]") # contain
         # Find element by value
-        submit_button = browser.find_element_by_xpath("//*[@value='Login']")  
-        clear_button = browser.find_element_by_xpath("//input[@value='Clear']") 
+        submit_button = browserwd.find_element(By.XPATH,"//*[@value='Login']")  
+        clear_button = browserwd.find_element(By.XPATH,"//input[@value='Clear']") 
         
         ''' These are the attributes available for By class:
         ID = "id"
