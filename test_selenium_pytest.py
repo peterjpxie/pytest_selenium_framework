@@ -9,6 +9,15 @@ see pytest.ini for more options.
 
 Notes:
 - Exceptions will cause test to fail and terminate just as assert.
+
+Selenium timeouts:
+1/ driver.get(url): No timeout, it will try to load all elements of the page fully, blocking.
+    You can try to a timeout by driver.set_page_load_timeout(X), but it will raise an TimeoutException and fail the test if timeouts.
+2/ driver.find_element(): Implicit wait, it will wait for the element to load before raising NoSuchElementException.
+    driver.implicitly_wait(X)
+3/ WebDriverWait(driver, X).until(expected_conditions.title_is('xxx')): wait for a condition like title match before raising an exception.
+    Some attributes of a driver like tltle, url, etc. are not updated immediately after loading a new page, 
+    so we need to wait for a while before checking them, and the implicit wait cannot be used here.
 """
 from time import sleep
 from datetime import datetime
@@ -23,8 +32,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
 
-# explicit wait time in secs after loading a new page to check page match.
+# time to wait for get method to load a page completely before raising TimeoutException
+TIMEWAIT_PAGE_LOAD_GET = 60
+# explicit wait time in secs after loading a new page to check page match with driver.title.
 TIMEWAIT_PAGE_LOAD = 15
+# timeout for elements to load
+TIMEWAIT_ELEMENT_LOAD = TIMEWAIT_PAGE_LOAD
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
 # %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
@@ -159,9 +172,10 @@ class TestPythonOrgPageModel():
             log.info('Failed to setup browser.')
         
         # taking screenshots on Exception,e.g. cannot find elements. But not in assert failure. 
-        self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())        
+        self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())    
+        self.wd.set_page_load_timeout(TIMEWAIT_PAGE_LOAD_GET)
         # set implicitly_wait for elements to load
-        self.wd.implicitly_wait(10)
+        self.wd.implicitly_wait(TIMEWAIT_ELEMENT_LOAD)
   
     def teardownOwn(self):
         log.info('teardownOwn::tearing down browser...')
