@@ -18,6 +18,11 @@ Selenium timeouts:
 3/ WebDriverWait(driver, X).until(expected_conditions.title_is('xxx')): wait for a condition like title match before raising an exception.
     Some attributes of a driver like tltle, url, etc. are not updated immediately after loading a new page, 
     so we need to wait for a while before checking them, and the implicit wait cannot be used here.
+
+Tricks:
+1/ Always maximize window on setup by drive.maximize_window().
+    Reason: Some responsive website have dynamic xpath / css for elements. e.g., xpath you see in chrome dev tool in full window 
+    could be different when the window size is smaller during tests.
 """
 from time import sleep
 from datetime import datetime
@@ -176,6 +181,9 @@ class TestPythonOrgPageModel():
         self.wd.set_page_load_timeout(TIMEWAIT_PAGE_LOAD_GET)
         # set implicitly_wait for elements to load
         self.wd.implicitly_wait(TIMEWAIT_ELEMENT_LOAD)
+        # self.wd.set_window_size(1024, 800)
+        # some responsive website have dynamic xpath / css for elements, so it is better to max window unless testing diff win size on purpose.
+        self.wd.maximize_window()        
   
     def teardownOwn(self):
         log.info('teardownOwn::tearing down browser...')
