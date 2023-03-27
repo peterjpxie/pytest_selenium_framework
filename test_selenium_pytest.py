@@ -23,8 +23,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
 
-# explicit wait time after loading a new page to check page match.
-TIMEWAIT_PAGE_LOAD = 3
+# explicit wait time in secs after loading a new page to check page match.
+TIMEWAIT_PAGE_LOAD = 15
 
 # !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
 # %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
