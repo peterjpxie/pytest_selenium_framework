@@ -68,7 +68,8 @@ def test_seleniumhq_homepage(request):
     browser.get('https://www.selenium.dev/')
     assert 'Selenium' in browser.title
 
-def test_yahoo_search(request):
+# disable yahoo search test as yahoo search is not available in some countries.
+def _test_yahoo_search(request):
     log.info("test_func %s:" % request.node.name)
     global browser
     browser.get('http://www.yahoo.com')
