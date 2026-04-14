@@ -77,7 +77,9 @@ def teardown_function():
     log.info('Teardown function')
     global browser
     browser.quit()
-    
+
+# request is a pytest built-in fixture providing information of the requesting test function.
+# https://docs.pytest.org/en/stable/reference/reference.html#std-fixture-request
 def test_seleniumhq_homepage(request):
     # print test function name
     log.info("test_func %s:" % request.node.name)
@@ -98,13 +100,13 @@ def _test_yahoo_search(request):
     sleep(2)     
 
 class TestPythonOrgChrome():
-    def setup(self):
+    def setup_method(self):
         log.info('Setting up browser...')
         self.wd = webdriver.Chrome() # webdriver.Firefox()
         # set viewport / window size
         self.wd.set_window_size(1024, 800)
  
-    def teardown(self):
+    def teardown_method(self):
         log.info('tearing down browser...')
         self.wd.quit()
         
