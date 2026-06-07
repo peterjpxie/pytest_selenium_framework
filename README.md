@@ -11,24 +11,27 @@ A homemade Python pytest + selenium test framework example
 1. Install Python3
 2. Install required packages by pip (pip3 in Linux)
 
-`pip install -U pytest selenium pytest-html` 
+```
+pip install -r requirements.txt
+```
 
-or
-
-`pip install -r requirements.txt`
-
-3. Download WebDriver executables
-
-Download WebDriver executables for your respective browsers under test, e.g. [chromedriver](https://chromedriver.chromium.org/downloads), [Edge WebDriver](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/) and [Firefox webdriver](https://github.com/mozilla/geckodriver/releases), to a path (e.g. d:/webdriver/) and add this path to system path so that the WebDriver executables can be called anywhere.  
+Note: Since selenium 4.12, it will auto download browser drivers on 1st run.
 
 # Run
-Download the code, and run 'pytest' in the same folder.
+List test cases:
+```
+pytest --collectonly -q
+```
 
-`pytest`
+Run all tests:
+```
+pytest
+```
 
 Run with HTML report:
-
-`pytest -v --html=report.html --self-contained-html` 
+```
+pytest -v --html=report.html --self-contained-html
+```
 
 More options are defined in pytest.ini or you can overwrite in CLI parameters.
 

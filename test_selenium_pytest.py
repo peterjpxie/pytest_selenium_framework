@@ -86,18 +86,8 @@ def test_seleniumhq_homepage(request):
     # Output: test_func test_seleniumhq_homepage:
     global browser
     browser.get('https://www.selenium.dev/')
-    assert 'Selenium' in browser.title
+    assert 'Selenium' in browser.title  
 
-# disable yahoo search test as yahoo search is not available in some countries.
-def _test_yahoo_search(request):
-    log.info("test_func %s:" % request.node.name)
-    global browser
-    browser.get('http://www.yahoo.com')
-    assert 'Yahoo' in browser.title
-    
-    elem = browser.find_element(By.NAME,'p')  # Find the search box
-    elem.send_keys('seleniumhq' + Keys.RETURN) 
-    sleep(2)     
 
 class TestPythonOrgChrome():
     def setup_method(self):
