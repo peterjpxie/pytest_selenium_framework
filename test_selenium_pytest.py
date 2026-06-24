@@ -36,6 +36,7 @@ from selenium.webdriver.support.events import AbstractEventListener
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
+import pdb
 
 # time to wait for get method to load a page completely before raising TimeoutException
 TIMEWAIT_PAGE_LOAD_GET = 60
@@ -95,6 +96,8 @@ class TestPythonOrgChrome():
         self.wd = webdriver.Chrome() # webdriver.Firefox()
         # set viewport / window size
         self.wd.set_window_size(1024, 800)
+        # take screenshots on exceptions like element not found
+        self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())  
  
     def teardown_method(self):
         log.info('tearing down browser...')
@@ -102,7 +105,9 @@ class TestPythonOrgChrome():
         
     def test_python_homepage(self):
         self.wd.get('https://www.python.org/')
+        sleep(0.01)
         assert 'Welcome to Python.org' == self.wd.title  
+        self.wd.find_element(By.NAME,"1q")
         sleep(2)
 
 # Test with a list of browsers, and headless mode
@@ -152,7 +157,7 @@ class TestPythonOrgMultiDrivers():
         for browser in browser_list: 
             self.setupOwn(browser)
             self.wd.get('https://www.python.org/')
-            assert 'Welcome to Python.org' == self.wd.title   
+            assert 'Welcome to Python.org' == self.wd.title 
             self.teardownOwn()
 
 
@@ -237,6 +242,13 @@ class ScreenshotListener(AbstractEventListener):
         screenshot_name = "screenshot_" + now + ".png"
         driver.save_screenshot(screenshot_name)
         log.info("Screenshot saved as '%s'" % screenshot_name)
+
+        # Also capture base64 so the HTML report hook can embed the *exact*
+        # screenshot taken at exception time (works with --self-contained-html).
+        try:
+            driver._last_screenshot_base64 = driver.get_screenshot_as_base64()
+        except Exception:
+            pass
 # Usage example:
 # self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())    
  
