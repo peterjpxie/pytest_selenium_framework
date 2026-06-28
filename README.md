@@ -3,7 +3,7 @@ A homemade Python pytest + selenium test framework example
 * pytest + selenium test framework using test functions and classes.
 * How to test a list of browsers for the same function (not copy & paste function/class)
 * Page object model
-* Take screenshots on exception, e.g., cannot find an element.
+* Take screenshots on test failure, e.g., cannot find an element, assert failure etc.
 * Implicit wait and explicit wait for loading pages or elements.
 * HTML reports
 
@@ -40,4 +40,5 @@ Screenshots taken via `ScreenshotListener` (on WebDriver exceptions) or on test 
 
 This is implemented via a `pytest_runtest_makereport` hook in [conftest.py](conftest.py) that attaches `driver.get_screenshot_as_base64()` using `pytest_html.extras.png(...)`. 
 
+[pytest-selenium plugin](https://pytest-selenium.readthedocs.io/en/latest/) and you can find an equivalent example in another repository [here](https://github.com/peterjpxie/pytest-selenium_plugin_examples).
 

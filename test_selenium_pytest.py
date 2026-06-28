@@ -37,6 +37,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
 import pdb
+# it is said it is better to define a logger fixture instead of direct import, but it works.
+from conftest import log
 
 # time to wait for get method to load a page completely before raising TimeoutException
 TIMEWAIT_PAGE_LOAD_GET = 60
@@ -45,27 +47,6 @@ TIMEWAIT_PAGE_LOAD = 15
 # timeout for elements to load
 TIMEWAIT_ELEMENT_LOAD = TIMEWAIT_PAGE_LOAD
 
-# !!!!! This logging.basicConfig will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
-# %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
-common_formatter = logging.Formatter(
-    "%(asctime)s [%(levelname)-7s][%(lineno)-3d]: %(message)s",
-    datefmt="%Y-%m-%d %I:%M:%S",
-)
-
-# Note: To create multiple log files, must use different logger name.
-def setup_logger(log_file, level=logging.INFO, name="", formatter=common_formatter):
-    """Function setup as many loggers as you want."""
-    handler = logging.FileHandler(log_file, mode="w")  # default mode is append
-    # Or use a rotating file handler
-    # handler = RotatingFileHandler(log_file,maxBytes=1024, backupCount=5)
-    handler.setFormatter(formatter)
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    return logger
-
-# default debug logger
-log = setup_logger("debug.log", logging.INFO, name=__name__)
 
 # Notes:
 #    - To use function without class, use 'global' browser scope across functions.
@@ -87,7 +68,8 @@ def test_seleniumhq_homepage(request):
     # Output: test_func test_seleniumhq_homepage:
     global browser
     browser.get('https://www.selenium.dev/')
-    assert 'Selenium' in browser.title  
+    assert 'Selenium' in browser.title
+    sleep(2)  
 
 
 class TestPythonOrgChrome():
@@ -106,8 +88,10 @@ class TestPythonOrgChrome():
     def test_python_homepage(self):
         self.wd.get('https://www.python.org/')
         sleep(0.01)
+        # change to 'Welcome to Python.org1' to see the failure report
         assert 'Welcome to Python.org' == self.wd.title  
-        self.wd.find_element(By.NAME,"1q")
+        # or change this to "q1"
+        self.wd.find_element(By.NAME,"q")
         sleep(2)
 
 # Test with a list of browsers, and headless mode
@@ -232,10 +216,9 @@ class TestPythonOrgPageModel():
         self.wd.save_screenshot(filename)
 
 
-# Take screenshot on Exception,e.g. cannot find elements. But not in assert failure. However for assert failure you can control and take screenshot if needed.
-# To take screenshot for both exception and assert failure, it seems we have to use unittest framework. Check below link:
-# https://stackoverflow.com/questions/12024848/automatic-screenshots-when-test-fail-by-selenium-webdriver-in-python
-# http://blog.likewise.org/2015/01/automatically-capture-browser-screenshots-after-failed-python-ghostdriver-tests/ 
+# Take screenshot and save to local on Exception, e.g. cannot find elements. 
+# But not in assert failure. However for assert failure you can control and take screenshot if needed.
+# Note: screenshot on any test failure is captured into pytest-html report via conftest.py / pytest_runtest_makereport.
 class ScreenshotListener(AbstractEventListener):
     def on_exception(self, exception, driver):
         now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')

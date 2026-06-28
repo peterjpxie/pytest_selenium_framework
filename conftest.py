@@ -7,7 +7,27 @@ import pytest
 from pytest_html import extras
 import logging
 
-log = logging.getLogger(__name__)
+# !!!!! don't directly call logging.basicConfig as it will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
+# %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
+common_formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)-7s][%(lineno)-3d]: %(message)s",
+    datefmt="%Y-%m-%d %I:%M:%S",
+)
+
+# Note: To create multiple log files, must use different logger name.
+def setup_logger(log_file, level=logging.INFO, name="", formatter=common_formatter):
+    """Function setup as many loggers as you want."""
+    handler = logging.FileHandler(log_file, mode="w")  # default mode is append
+    # Or use a rotating file handler
+    # handler = RotatingFileHandler(log_file,maxBytes=1024, backupCount=5)
+    handler.setFormatter(formatter)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger
+
+# default debug logger
+log = setup_logger("debug.log", logging.INFO, name=__name__)
 
 
 def _get_driver_from_item(item):
@@ -47,7 +67,12 @@ def pytest_runtest_makereport(item, call):
 
     This makes screenshots appear embedded inside the HTML report
     even with --self-contained-html.
+    
+    This function is called for every test phase ('setup', 'call', 'teardown').
+    'item'  -> the collected test function
+    'call'  -> the CallInfo object for that phase
     """
+    # fixture to get test result
     outcome = yield
     report = outcome.get_result()
 
@@ -70,12 +95,12 @@ def pytest_runtest_makereport(item, call):
         if not screenshot_base64:
             screenshot_base64 = driver.get_screenshot_as_base64()
 
-        # Use the modern report.extras list (pytest-html >= 2/3/4)
-        extra = getattr(report, "extras", [])
+        # Use the modern report.extras list (pytest-html >= 4.0.0)
+        new_extras = getattr(report, "extras", [])
         # extras.png(base64) is a convenience for image(..., mime_type=image/png)
-        extra.append(extras.png(screenshot_base64, name="Screenshot"))
-        report.extras = extra
-
+        new_extras.append(extras.png(screenshot_base64, name="Screenshot"))
+        report.extras = new_extras
+        # Note this log won't be captured in the pytest outputs as this function is defined in the hook
         log.info("Attached screenshot to HTML report for failed test: %s", item.nodeid)
     except Exception as e:
         # Don't let screenshot failure break the report
