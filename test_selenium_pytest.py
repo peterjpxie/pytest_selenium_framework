@@ -64,7 +64,7 @@ def teardown_function():
 # https://docs.pytest.org/en/stable/reference/reference.html#std-fixture-request
 def test_seleniumhq_homepage(request):
     # print test function name
-    log.info("test_func %s:" % request.node.name)
+    log.info("test_func %s" % request.node.nodeid)
     # Output: test_func test_seleniumhq_homepage:
     global browser
     browser.get('https://www.selenium.dev/')
@@ -73,7 +73,7 @@ def test_seleniumhq_homepage(request):
 
 
 class TestPythonOrgChrome():
-    def setup_method(self):
+    def setup_method(self):       
         log.info('Setting up browser...')
         self.wd = webdriver.Chrome() # webdriver.Firefox()
         # set viewport / window size
@@ -85,9 +85,10 @@ class TestPythonOrgChrome():
         log.info('tearing down browser...')
         self.wd.quit()
         
-    def test_python_homepage(self):
+    def test_python_homepage(self, request):
+        # print test function name, e.g. test_selenium_pytest.py::test_seleniumhq_homepage
+        log.info("test_func %s" % request.node.nodeid)         
         self.wd.get('https://www.python.org/')
-        sleep(0.01)
         # change to 'Welcome to Python.org1' to see the failure report
         assert 'Welcome to Python.org' == self.wd.title  
         # or change this to "q1"
@@ -137,11 +138,14 @@ class TestPythonOrgMultiDrivers():
         if self.wd.service.process != None:
             self.wd.quit()  
             
-    def test_python_homepage(self):
+    def test_python_homepage(self, request):
+        # print test function name
+        log.info("test_func %s" % request.node.nodeid)           
         for browser in browser_list: 
             self.setupOwn(browser)
             self.wd.get('https://www.python.org/')
-            assert 'Welcome to Python.org' == self.wd.title 
+            assert 'Welcome to Python.org' == self.wd.title
+            sleep(2) 
             self.teardownOwn()
 
 
@@ -189,11 +193,15 @@ class TestPythonOrgPageModel():
             assert homepage.is_page_matched()
             # Test Validations 
             # assert homepage.getTitle() == 'Failed Title'
+            sleep(2)
             pyPiHomepage = homepage.click_pypi()
             # Check it redirects to PyPi website.
             assert pyPiHomepage.is_page_matched()
+            sleep(2)
             
+            # Note: pypi is protected by capctcha using fastly now, cannot bypass it w/o human interaction
             # Search by 'selenium' and check 1st result is selenium package.
+            """
             searchText = 'selenium'
             searchResultPage = pyPiHomepage.searchPackage(searchText)
             assert searchResultPage.is_page_matched()
@@ -204,6 +212,7 @@ class TestPythonOrgPageModel():
             if actual_resultText != expected_resultText:
                 self.take_screenshot()
             assert actual_resultText == expected_resultText, 'search result not matched'
+            """
             # Tear down browser
             self.teardownOwn()
             
@@ -222,7 +231,7 @@ class TestPythonOrgPageModel():
 class ScreenshotListener(AbstractEventListener):
     def on_exception(self, exception, driver):
         now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        screenshot_name = "screenshot_" + now + ".png"
+        screenshot_name = "screenshot_on_exception_" + now + ".png"
         driver.save_screenshot(screenshot_name)
         log.info("Screenshot saved as '%s'" % screenshot_name)
 
@@ -245,27 +254,7 @@ When a page is changed, you only need to change that page object, not the test f
 Page objects themselves should never make verifications or assertions. 
 There is one verification which can, and should, be within the page object and that is to verify that the page, and possibly critical elements on the page, were loaded correctly.
 '''
-
-# Base class is not necessary in my opinion, unless you have quite some common functions/variables. 
-# Keep in simple. Please also refer to the java example in selenium org in 1st link.
-class PythonOrgBase():
-    def __init__(self, webdrive):
-            self.wd = webdrive   
-    # Optionally you can define common methods or class variables in base class.
-
-# Inherit base page object
-class PythonOrgHomepage_inheritBase(PythonOrgBase): 
-    # Call this to verify if page is matched (1st check) right after initialization
-    def is_page_matched(self):
-        # Check if it is the right page by title
-        # return self.wd.title == 'Welcome to Python.org'
-        try:
-            ret = WebDriverWait(self.wd, TIMEWAIT_PAGE_LOAD).until( EC.title_is('Welcome to Python.org' ))
-        except:
-            ret = False
-        return ret
-
-# Don't use base page object        
+       
 class PythonOrgHomepage(): 
     def __init__(self, webdrive):
         self.wd = webdrive   
@@ -370,12 +359,12 @@ Methods:
 find_element(By.X, "XX") - General, replace below deprecated methods.
 find_element_by_id
 find_element_by_name
-find_element_by_xpath  -- Recommend this
+find_element_by_css_selector
+find_element_by_xpath
 find_element_by_link_text
 find_element_by_partial_link_text
 find_element_by_tag_name
 find_element_by_class_name
-find_element_by_css_selector  -- Don't like this because it has spaces in the path
 find_elements  - Return a list IMO.
 
 Inspectors:

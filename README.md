@@ -36,9 +36,9 @@ pytest -v --html=report.html --self-contained-html
 More options are defined in pytest.ini or you can overwrite in CLI parameters.
 
 # Screenshots in HTML report
-Screenshots taken via `ScreenshotListener` (on WebDriver exceptions) or on test failures are now automatically embedded in the pytest-html report (including with `--self-contained-html`).
+Screenshots taken via `ScreenshotListener` (on WebDriver exceptions) or on test failures are automatically embedded in the pytest-html report (works with `--self-contained-html`).
 
 This is implemented via a `pytest_runtest_makereport` hook in [conftest.py](conftest.py) that attaches `driver.get_screenshot_as_base64()` using `pytest_html.extras.png(...)`. 
 
-[pytest-selenium plugin](https://pytest-selenium.readthedocs.io/en/latest/) and you can find an equivalent example in another repository [here](https://github.com/peterjpxie/pytest-selenium_plugin_examples).
+Note: You can also use [pytest-selenium](https://pytest-selenium.readthedocs.io/en/latest/) plugin to achieve the same and you can find an equivalent example in another repository [here](https://github.com/peterjpxie/pytest-selenium_plugin_examples).
 
