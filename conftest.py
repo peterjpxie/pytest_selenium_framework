@@ -3,6 +3,7 @@ Support for embedding screenshots in pytest-html report.
 
 Works with --self-contained-html because we pass base64 content.
 """
+
 import pytest
 from pytest_html import extras
 import logging
@@ -13,6 +14,7 @@ common_formatter = logging.Formatter(
     "%(asctime)s [%(levelname)-7s][%(lineno)-3d]: %(message)s",
     datefmt="%Y-%m-%d %I:%M:%S",
 )
+
 
 # Note: To create multiple log files, must use different logger name.
 def setup_logger(log_file, level=logging.INFO, name="", formatter=common_formatter):
@@ -25,6 +27,7 @@ def setup_logger(log_file, level=logging.INFO, name="", formatter=common_formatt
     logger.setLevel(level)
     logger.addHandler(handler)
     return logger
+
 
 # default debug logger
 log = setup_logger("debug.log", logging.INFO, name=__name__)
@@ -53,6 +56,7 @@ def _get_driver_from_item(item):
     # Legacy global used in some tests here
     try:
         import test_selenium_pytest as tmod
+
         if hasattr(tmod, "browser"):
             return tmod.browser
     except Exception:
@@ -67,7 +71,7 @@ def pytest_runtest_makereport(item, call):
 
     This makes screenshots appear embedded inside the HTML report
     even with --self-contained-html.
-    
+
     This function is called for every test phase ('setup', 'call', 'teardown').
     'item'  -> the collected test function
     'call'  -> the CallInfo object for that phase
