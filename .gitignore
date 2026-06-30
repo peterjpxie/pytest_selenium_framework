@@ -1,4 +1,5 @@
 ######## added ######
+.vscode/
 *.log
 assets
 *.png

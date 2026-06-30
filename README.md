@@ -40,5 +40,5 @@ Screenshots taken via `ScreenshotListener` (on WebDriver exceptions) or on test 
 
 This is implemented via a `pytest_runtest_makereport` hook in [conftest.py](conftest.py) that attaches `driver.get_screenshot_as_base64()` using `pytest_html.extras.png(...)`. 
 
-Note: You can also use [pytest-selenium](https://pytest-selenium.readthedocs.io/en/latest/) plugin to achieve the same and you can find an equivalent example in another repository [here](https://github.com/peterjpxie/pytest-selenium_plugin_examples).
+Note: You can also use [pytest-selenium](https://pytest-selenium.readthedocs.io/en/latest/) plugin to achieve the same.
 
