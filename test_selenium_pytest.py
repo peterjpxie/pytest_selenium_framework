@@ -135,24 +135,44 @@ class TestPythonOrgMultiDrivers:
             log.info("Failed to setup browser.")
 
     def teardownOwn(self):
-        log.info("tearing down browser...")
+        log.info("teardownOwn::tearing down browser...")
         self.wd.quit()
 
-    # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed.
-    def teardown(self):
-        log.info("teardown::tearing down browser...")
-        # self.wd.service.process == None if quit already.
-        if self.wd.service.process != None:
-            self.wd.quit()
+    # We need the default teardown method so that the browser can be closed in case of test assert failure, 
+    # in which test function is terminated and teardownOwn won't be executed.
+    def teardown_method(self):
+        # Safety net: close browser only if teardownOwn() did not already quit it.
+        #┌───────────────┬───────────────────────────┬────────────────┬────────────┐
+        #│ State         │ service.process           │ process.poll() │ returncode │
+        #├───────────────┼───────────────────────────┼────────────────┼────────────┤
+        #│ Running       │ <Popen ...>               │ None           │ None       │
+        #├───────────────┼───────────────────────────┼────────────────┼────────────┤
+        #│ After .quit() │ <Popen ...>               │ 0              │ 0          │
+        #└───────────────┴───────────────────────────┴────────────────┴────────────┘
+        # log.info("teardown_method::tearing down browser if not yet")
+        wd = getattr(self, 'wd', None)
+        if wd is not None:
+            proc = getattr(getattr(wd, 'service', None), 'process', None)
+            if proc is not None and proc.poll() is None:
+                log.info("teardown_method::tearing down browser")
+                try:
+                    wd.quit()
+                except Exception:
+                    pass
 
+    # todo: use parametrize
     def test_python_homepage(self, request):
         # print test function name
         log.info("test_func %s" % request.node.nodeid)
         for browser in browser_list:
             self.setupOwn(browser)
+            # Note: we don't use try finally here because we want the browser open to take screenshot on failure 
+            #   in the pytest_runtest_makereport hook function
+            # try:
             self.wd.get("https://www.python.org/")
             assert "Welcome to Python.org" == self.wd.title
             sleep(2)
+            # finally:
             self.teardownOwn()
 
 
@@ -181,12 +201,27 @@ class TestPythonOrgPageModel:
         log.info("teardownOwn::tearing down browser...")
         self.wd.quit()
 
-    # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed.
-    def teardown(self):
-        log.info("teardown::tearing down browser...")
-        # self.wd.service.process == None if quit already.
-        if self.wd.service.process != None:
-            self.wd.quit()
+    # We need the default teardown method so that the browser can be closed in case of test assert failure, 
+    # in which test function is terminated and teardownOwn won't be executed.
+    def teardown_method(self):
+        # Safety net: close browser only if teardownOwn() did not already quit it.
+        #┌───────────────┬───────────────────────────┬────────────────┬────────────┐
+        #│ State         │ service.process           │ process.poll() │ returncode │
+        #├───────────────┼───────────────────────────┼────────────────┼────────────┤
+        #│ Running       │ <Popen ...>               │ None           │ None       │
+        #├───────────────┼───────────────────────────┼────────────────┼────────────┤
+        #│ After .quit() │ <Popen ...>               │ 0              │ 0          │
+        #└───────────────┴───────────────────────────┴────────────────┴────────────┘
+        # log.info("teardown_method::tearing down browser if not yet")
+        wd = getattr(self, 'wd', None)
+        if wd is not None:
+            proc = getattr(getattr(wd, 'service', None), 'process', None)
+            if proc is not None and proc.poll() is None:
+                log.info("teardown_method::tearing down browser")
+                try:
+                    wd.quit()
+                except Exception:
+                    pass
 
     def test_python_homepage_pageObject(self):
         for browser in browser_list:
