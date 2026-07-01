@@ -37,6 +37,7 @@ from selenium.webdriver.support.events import AbstractEventListener
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import inspect
+import pytest
 import pdb
 
 # it is said it is better to define a logger fixture instead of direct import, but it works.
@@ -102,11 +103,11 @@ class TestPythonOrgChrome:
 
 # Test with a list of browsers, and headless mode
 # Design:
-#   Define own setup / teardown function so we can assign browser as argument.
+#   Define own setup function so we can assign browser as argument and use pytest.parametrize().
 
 # Define browsers you want to test, you can read from a config file as well.
-# browser_list = ['Firefox','Chrome']
-browser_list = ["Chrome"]
+browser_list = ["Chrome", "Firefox"]
+# browser_list = ["Chrome"]
 
 
 class TestPythonOrgMultiDrivers:
@@ -131,29 +132,23 @@ class TestPythonOrgMultiDrivers:
                 options.add_argument("--disable-gpu")
                 self.wd = webdriver.Chrome(chrome_options=options)
                 """
-        except:
+        except Exception as e:
             log.info("Failed to setup browser.")
+            raise e
 
-    def teardownOwn(self):
-        log.info("tearing down browser...")
+    def teardown_method(self):
+        log.info("teardown_method::tearing down browser...")
         self.wd.quit()
 
-    # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed.
-    def teardown(self):
-        log.info("teardown::tearing down browser...")
-        # self.wd.service.process == None if quit already.
-        if self.wd.service.process != None:
-            self.wd.quit()
-
-    def test_python_homepage(self, request):
+    # parametrize means for browser in browser_list run this test function.
+    @pytest.mark.parametrize("browser", browser_list)
+    def test_python_homepage(self, browser, request):
         # print test function name
         log.info("test_func %s" % request.node.nodeid)
-        for browser in browser_list:
-            self.setupOwn(browser)
-            self.wd.get("https://www.python.org/")
-            assert "Welcome to Python.org" == self.wd.title
-            sleep(2)
-            self.teardownOwn()
+        self.setupOwn(browser)
+        self.wd.get("https://www.python.org/")
+        assert "Welcome to Python.org" == self.wd.title
+        sleep(2)
 
 
 # Page Object Model
@@ -177,51 +172,45 @@ class TestPythonOrgPageModel:
         # some responsive website have dynamic xpath / css for elements, so it is better to max window unless testing diff win size on purpose.
         self.wd.maximize_window()
 
-    def teardownOwn(self):
-        log.info("teardownOwn::tearing down browser...")
+    def teardown_method(self):
+        log.info("teardown_method::tearing down browser...")
         self.wd.quit()
 
-    # We need the default teardown function so that the browser can be closed in case of test assert failure, in which test function is terminated and teardownOwn won't be executed.
-    def teardown(self):
-        log.info("teardown::tearing down browser...")
-        # self.wd.service.process == None if quit already.
-        if self.wd.service.process != None:
-            self.wd.quit()
+    # parametrize means for browser in browser_list run this test function.
+    @pytest.mark.parametrize("browser", browser_list)
+    def test_python_homepage_pageObject(self, browser, request):
+        # print test function name
+        log.info("test_func %s" % request.node.nodeid)
+        # Set up browser
+        self.setupOwn(browser)
 
-    def test_python_homepage_pageObject(self):
-        for browser in browser_list:
-            # Set up browser
-            self.setupOwn(browser)
+        # Test function
+        self.wd.get("https://www.python.org/")
+        homepage = PythonOrgHomepage(self.wd)
+        # Always check if it is the right page first
+        assert homepage.is_page_matched()
+        # Test Validations
+        # assert homepage.getTitle() == "Failed Title"
+        sleep(2)
+        pyPiHomepage = homepage.click_pypi()
+        # Check it redirects to PyPi website.
+        assert pyPiHomepage.is_page_matched()
+        sleep(2)
 
-            # Test function
-            self.wd.get("https://www.python.org/")
-            homepage = PythonOrgHomepage(self.wd)
-            # Always check if it is the right page first
-            assert homepage.is_page_matched()
-            # Test Validations
-            # assert homepage.getTitle() == 'Failed Title'
-            sleep(2)
-            pyPiHomepage = homepage.click_pypi()
-            # Check it redirects to PyPi website.
-            assert pyPiHomepage.is_page_matched()
-            sleep(2)
-
-            # Note: pypi is protected by capctcha using fastly now, cannot bypass it w/o human interaction
-            # Search by 'selenium' and check 1st result is selenium package.
-            """
-            searchText = 'selenium'
-            searchResultPage = pyPiHomepage.searchPackage(searchText)
-            assert searchResultPage.is_page_matched()
-            check_result_row = 1
-            expected_resultText = 'selenium'
-            actual_resultText = searchResultPage.getSearchResultText(check_result_row) 
-            # self.wd.save_screenshot("screenshot_searchResult.png")
-            if actual_resultText != expected_resultText:
-                self.take_screenshot()
-            assert actual_resultText == expected_resultText, 'search result not matched'
-            """
-            # Tear down browser
-            self.teardownOwn()
+        # Note: pypi is protected by capctcha using fastly now, cannot bypass it w/o human interaction
+        # Search by 'selenium' and check 1st result is selenium package.
+        """
+        searchText = 'selenium'
+        searchResultPage = pyPiHomepage.searchPackage(searchText)
+        assert searchResultPage.is_page_matched()
+        check_result_row = 1
+        expected_resultText = 'selenium'
+        actual_resultText = searchResultPage.getSearchResultText(check_result_row) 
+        # self.wd.save_screenshot("screenshot_searchResult.png")
+        if actual_resultText != expected_resultText:
+            self.take_screenshot()
+        assert actual_resultText == expected_resultText, 'search result not matched'
+        """
 
     def take_screenshot(self):
         class_name = self.__class__.__name__
@@ -476,4 +465,4 @@ def disabled_test_locators():
         log.info("Found element.")
         username_elem.send_keys("Peter")
 
-    sleep(1)
+    sleep(2)
