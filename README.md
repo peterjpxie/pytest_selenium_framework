@@ -1,9 +1,9 @@
 # pytest_selenium_framework
 A homemade Python pytest + selenium test framework example
 * pytest + selenium test framework using test functions and classes.
-* How to test a list of browsers for the same function (not copy & paste function/class)
+* How to test a list of browsers for the same function via `pytest.parametrize` (not copy & paste function/class)
+* Take screenshots automatically and embed into html report on test failure, e.g., cannot find an element, assert failure etc.
 * Page object model
-* Take screenshots on test failure, e.g., cannot find an element, assert failure etc.
 * Implicit wait and explicit wait for loading pages or elements.
 * HTML reports
 
