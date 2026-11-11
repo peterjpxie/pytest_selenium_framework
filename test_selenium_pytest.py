@@ -118,9 +118,9 @@ class TestPythonOrgMultiDrivers:
                 self.wd = webdriver.Firefox()
                 # To run headless mode in Firefox, add below options.
                 """
-                vOptions = webdriver.firefox.options.Options()
-                vOptions.headless = True 
-                self.wd = webdriver.Firefox(options=vOptions)
+                options = webdriver.firefox.options.Options()
+                options.add_argument("--headless")
+                self.wd = webdriver.Firefox(options=options)
                 """
             else:
                 self.wd = webdriver.Chrome()
