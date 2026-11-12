@@ -27,6 +27,7 @@ Tricks:
 
 from time import sleep
 from datetime import datetime
+import os
 import platform
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -43,7 +44,8 @@ import pdb
 # it is said it is better to define a logger fixture instead of direct import, but it works.
 from conftest import log
 
-HEADLESS = True
+# Headless mode is off by default; set HEADLESS=1 to turn it on.
+HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 # time to wait for get method to load a page completely before raising TimeoutException
 TIMEWAIT_PAGE_LOAD_GET = 60
 # explicit wait time in secs after loading a new page to check page match with driver.title.

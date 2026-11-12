@@ -39,8 +39,8 @@ More options are defined in pytest.ini or you can overwrite in CLI parameters.
 # Config
 - Headless
 ```
-# test_selenium_pytest.py
-HEADLESS=True
+# off by default; environment variable HEADLESS=1 enables it
+HEADLESS=1 pytest
 ```
 
 # Notes
