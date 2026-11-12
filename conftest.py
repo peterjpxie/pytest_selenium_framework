@@ -8,6 +8,12 @@ import pytest
 from pytest_html import extras
 import logging
 
+PARAMTRIZED_CLASSES_TO_REORDER = (
+    "TestParamtrizeSeq",
+    "TestPythonOrgMultiDrivers",
+    "TestPythonOrgPageModel",
+)
+
 # !!!!! don't directly call logging.basicConfig as it will also change selenium logging outputs. Set level DEBUG for debugging selenium !!!!!
 # %(levelname)7s to align 7 bytes to right, %(levelname)-7s to left.
 common_formatter = logging.Formatter(
@@ -63,6 +69,27 @@ def _get_driver_from_item(item):
         pass
 
     return None
+
+
+def _is_param_major_target(item):
+    cls = getattr(item, "cls", None)
+    return (
+        cls is not None
+        # and item.module.__name__ == "test_paramtrize_seq"
+        and cls.__name__ in PARAMTRIZED_CLASSES_TO_REORDER
+    )
+
+
+def pytest_collection_modifyitems(session, config, items):
+    """Run all values of one parameter before moving to the next value.
+    i.e. run all tests with Chrome, then all tests with Firefox.
+    """
+    positions = [i for i, item in enumerate(items) if _is_param_major_target(item)]
+    target_items = [items[i] for i in positions]
+    target_items.sort(key=lambda item: tuple(item.callspec.indices.values()))
+
+    for position, item in zip(positions, target_items):
+        items[position] = item
 
 
 @pytest.hookimpl(hookwrapper=True)

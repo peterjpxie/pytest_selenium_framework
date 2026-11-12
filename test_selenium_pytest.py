@@ -27,9 +27,9 @@ Tricks:
 
 from time import sleep
 from datetime import datetime
+import platform
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-import logging
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.events import EventFiringWebDriver
@@ -43,6 +43,7 @@ import pdb
 # it is said it is better to define a logger fixture instead of direct import, but it works.
 from conftest import log
 
+HEADLESS = True
 # time to wait for get method to load a page completely before raising TimeoutException
 TIMEWAIT_PAGE_LOAD_GET = 60
 # explicit wait time in secs after loading a new page to check page match with driver.title.
@@ -110,56 +111,78 @@ browser_list = ["Chrome", "Firefox"]
 # browser_list = ["Chrome"]
 
 
+def is_wsl():
+    return "microsoft" in platform.release().lower()
+
+
+@pytest.mark.parametrize("browser", browser_list)
 class TestPythonOrgMultiDrivers:
     def setupOwn(self, browser):
         log.info("Setting up browser...")
         try:
             if str(browser).lower() == "firefox":
-                self.wd = webdriver.Firefox()
-                # To run headless mode in Firefox, add below options.
-                """
-                options = webdriver.firefox.options.Options()
-                options.add_argument("--headless")
+                if HEADLESS:
+                    options = webdriver.firefox.options.Options()
+                    # official documented option is -headless but it is said --headless also works.
+                    options.add_argument("-headless")
+                else:
+                    options = None
                 self.wd = webdriver.Firefox(options=options)
-                """
             else:
-                self.wd = webdriver.Chrome()
-                # To run headless mode, i.e. no UI, add below options.
+                # add below options especially on env without desktop like WSL.
                 # And you can ignore this error (no impact):  [0101/115120.672:ERROR:gpu_process_transport_factory.cc(967)] Lost UI shared context.
-                """
                 options = webdriver.ChromeOptions()
-                options.add_argument("--headless")
                 options.add_argument("--disable-gpu")
-                self.wd = webdriver.Chrome(chrome_options=options)
-                """
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+                if HEADLESS:
+                    options.add_argument("--headless")
+                self.wd = webdriver.Chrome(options=options)
         except Exception as e:
             log.info("Failed to setup browser.")
             raise e
 
     def teardown_method(self):
         log.info("teardown_method::tearing down browser...")
-        self.wd.quit()
+        # setup may have failed before self.wd was assigned
+        if getattr(self, "wd", None) is not None:
+            self.wd.quit()
 
     # parametrize means for browser in browser_list run this test function.
-    @pytest.mark.parametrize("browser", browser_list)
-    def test_python_homepage(self, browser, request):
+    # @pytest.mark.parametrize("browser", browser_list)
+    def test_a_homepage(self, browser, request):
         # print test function name
         log.info("test_func %s" % request.node.nodeid)
         self.setupOwn(browser)
-        self.wd.get("https://www.python.org/")
-        assert "Welcome to Python.org" == self.wd.title
+        self.wd.get("https://www.apple.com/")
+        assert "Apple" == self.wd.title
         sleep(2)
 
 
 # Page Object Model
+@pytest.mark.parametrize("browser", browser_list)
 class TestPythonOrgPageModel:
     def setupOwn(self, browser):
         log.info("Setting up browser...")
         try:
             if str(browser).lower() == "firefox":
-                self.wd = webdriver.Firefox()
+                if HEADLESS:
+                    options = webdriver.firefox.options.Options()
+                    # official documented option is -headless but it is said --headless also works.
+                    options.add_argument("-headless")
+                else:
+                    options = None
+                self.wd = webdriver.Firefox(options=options)
             else:
-                self.wd = webdriver.Chrome()
+                # add below options especially on env without desktop like WSL.
+                # And you can ignore this error (no impact):  [0101/115120.672:ERROR:gpu_process_transport_factory.cc(967)] Lost UI shared context.
+                options = webdriver.ChromeOptions()
+                options.add_argument("--disable-gpu")
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+                if HEADLESS:
+                    options.add_argument("--headless")
+                self.wd = webdriver.Chrome(options=options)
         except:
             log.info("Failed to setup browser.")
 
@@ -174,10 +197,12 @@ class TestPythonOrgPageModel:
 
     def teardown_method(self):
         log.info("teardown_method::tearing down browser...")
-        self.wd.quit()
+        # setup may have failed before self.wd was assigned
+        if getattr(self, "wd", None) is not None:
+            self.wd.quit()
 
     # parametrize means for browser in browser_list run this test function.
-    @pytest.mark.parametrize("browser", browser_list)
+    # @pytest.mark.parametrize("browser", browser_list)
     def test_python_homepage_pageObject(self, browser, request):
         # print test function name
         log.info("test_func %s" % request.node.nodeid)
