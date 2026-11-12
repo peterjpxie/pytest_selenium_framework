@@ -59,7 +59,6 @@ TIMEWAIT_ELEMENT_LOAD = TIMEWAIT_PAGE_LOAD
 def setup_function():
     log.info("Setup function")
     global browser
-    browser = webdriver.Firefox()
     if HEADLESS:
         options = webdriver.firefox.options.Options()
         options.add_argument("-headless")
