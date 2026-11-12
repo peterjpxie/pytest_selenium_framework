@@ -59,8 +59,13 @@ TIMEWAIT_ELEMENT_LOAD = TIMEWAIT_PAGE_LOAD
 def setup_function():
     log.info("Setup function")
     global browser
-    browser = webdriver.Chrome()
-
+    browser = webdriver.Firefox()
+    if HEADLESS:
+        options = webdriver.firefox.options.Options()
+        options.add_argument("-headless")
+    else:
+        options = None
+    browser = webdriver.Firefox(options=options)
 
 def teardown_function():
     log.info("Teardown function")
@@ -78,30 +83,6 @@ def test_seleniumhq_homepage(request):
     browser.get("https://www.selenium.dev/")
     assert "Selenium" in browser.title
     sleep(2)
-
-
-class TestPythonOrgChrome:
-    def setup_method(self):
-        log.info("Setting up browser...")
-        self.wd = webdriver.Chrome()  # webdriver.Firefox()
-        # set viewport / window size
-        self.wd.set_window_size(1024, 800)
-        # take screenshots on exceptions like element not found
-        self.wd = EventFiringWebDriver(self.wd, ScreenshotListener())
-
-    def teardown_method(self):
-        log.info("tearing down browser...")
-        self.wd.quit()
-
-    def test_python_homepage(self, request):
-        # print test function name, e.g. test_selenium_pytest.py::test_seleniumhq_homepage
-        log.info("test_func %s" % request.node.nodeid)
-        self.wd.get("https://www.python.org/")
-        # change to 'Welcome to Python.org1' to see the failure report
-        assert "Welcome to Python.org" == self.wd.title
-        # or change this to "q1"
-        self.wd.find_element(By.NAME, "q")
-        sleep(2)
 
 
 # Test with a list of browsers, and headless mode
