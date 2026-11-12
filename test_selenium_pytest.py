@@ -116,7 +116,7 @@ def is_wsl():
 
 
 @pytest.mark.parametrize("browser", browser_list)
-class TestPythonOrgMultiDrivers:
+class TestMultiDrivers:
     def setupOwn(self, browser):
         log.info("Setting up browser...")
         try:
